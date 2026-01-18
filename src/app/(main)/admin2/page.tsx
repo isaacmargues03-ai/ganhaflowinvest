@@ -1,79 +1,43 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, TicketPlus, Trash2, Shield, Gem } from 'lucide-react';
+import { Copy, TicketPlus, Trash2, Shield } from 'lucide-react';
 import type { Token } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { useUser } from '@/firebase';
-
-// IMPORTANTE: Este email está hardcoded. Para um sistema de produção,
-// use Firebase Custom Claims para definir roles de administrador.
-const ADMIN_EMAIL = 'admin@ganhaflow.com';
 
 export default function AdminPage() {
   const { toast } = useToast();
   const [tokens, setTokens] = useState<Token[]>([]);
   const [amount, setAmount] = useState<number | string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const { user, isLoading: isUserLoading } = useUser();
-  const router = useRouter();
 
-  // Proteção da rota
   useEffect(() => {
-    if (!isUserLoading) {
-      if (!user || user.email !== ADMIN_EMAIL) {
-        toast({
-          variant: 'destructive',
-          title: 'Acesso Negado',
-          description: 'Você não tem permissão para acessar esta página.',
-        });
-        router.push('/dashboard');
+    setIsLoading(true);
+    try {
+      const storedTokens = window.localStorage.getItem('ganhaflow_tokens');
+      if (storedTokens) {
+        setTokens(JSON.parse(storedTokens));
       }
+    } catch (error) {
+      console.error("Failed to load tokens from localStorage", error);
     }
-  }, [user, isUserLoading, router, toast]);
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
-    if (user && user.email === ADMIN_EMAIL) {
-        setIsLoading(true);
-        try {
-          const storedTokens = window.localStorage.getItem('ganhaflow_tokens');
-          if (storedTokens) {
-            setTokens(JSON.parse(storedTokens));
-          }
-        } catch (error) {
-          console.error("Failed to load tokens from localStorage", error);
-        }
-        setIsLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!isLoading && user && user.email === ADMIN_EMAIL) {
+    if (!isLoading) {
       try {
         window.localStorage.setItem('ganhaflow_tokens', JSON.stringify(tokens));
       } catch (error) {
         console.error("Failed to save tokens to localStorage", error);
       }
     }
-  }, [tokens, isLoading, user]);
-
-  if (isUserLoading || !user || user.email !== ADMIN_EMAIL) {
-     return (
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 flex items-center justify-center text-center">
-        <div className="flex flex-col items-center gap-4">
-          <Gem className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-muted-foreground">Verificando permissões...</p>
-        </div>
-      </main>
-    );
-  }
-
+  }, [tokens, isLoading]);
 
   const generateToken = () => {
     if (typeof amount !== 'number' || amount <= 0) {
@@ -96,7 +60,7 @@ export default function AdminPage() {
     setAmount('');
     toast({
       title: "Token Gerado!",
-      description: `Token ${newId} de R$ ${amount.toFixed(2)} foi criado.`,
+      description: `Token ${newId} de R$ ${Number(amount).toFixed(2)} foi criado.`,
     });
   };
 

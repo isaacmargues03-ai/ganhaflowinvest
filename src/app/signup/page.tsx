@@ -10,8 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 export default function SignupPage() {
   const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
@@ -21,48 +19,19 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const auth = getAuth();
-  const firestore = getFirestore();
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Update Firebase Auth profile
-      await updateProfile(user, { displayName: name });
-      
-      // Create user document in Firestore
-      await setDoc(doc(firestore, "users", user.uid), {
-        name: name,
-        email: user.email,
-        balance: 0, // Initial balance
-      });
-
-      toast({
-        title: 'Conta criada com sucesso!',
-        description: 'Redirecionando para o seu dashboard.',
-      });
-      router.push('/dashboard');
-
-    } catch (error: any) {
-      console.error(error);
-       let description = 'Ocorreu um erro ao criar sua conta. Tente novamente.';
-      if (error.code === 'auth/email-already-in-use') {
-        description = 'Este endereço de e-mail já está em uso.';
-      } else if (error.code === 'auth/weak-password') {
-        description = 'Sua senha é muito fraca. Tente uma senha mais forte.';
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Erro no Cadastro',
-        description: description,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // This is a mock signup. In a real app, you'd create a user.
+    setTimeout(() => {
+        toast({
+            title: 'Conta criada com sucesso!',
+            description: 'Redirecionando para o seu dashboard.',
+        });
+        router.push('/dashboard');
+        setIsLoading(false);
+    }, 500);
   };
 
   return (

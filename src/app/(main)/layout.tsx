@@ -27,10 +27,6 @@ import {
 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { InvestmentsProvider } from '@/context/investments-context';
-import { useUser } from '@/firebase';
-import { getAuth, signOut } from 'firebase/auth';
-import { useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -45,27 +41,11 @@ const navItems = [
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isLoading } = useUser();
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isLoading, router]);
-
-  const handleLogout = async () => {
-    const auth = getAuth();
-    await signOut(auth);
+  const handleLogout = () => {
+    // Mock logout, just redirects to login
     router.push('/login');
   };
-
-  if (isLoading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Gem className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <InvestmentsProvider>
@@ -106,16 +86,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </SidebarMenu>
             <div className="flex items-center gap-3 p-2 mt-4">
               <Avatar className="h-10 w-10">
-                {user.photoURL ? (
-                  <AvatarImage src={user.photoURL} alt={user.displayName || 'User Avatar'} />
-                ) : (
-                  <AvatarImage src="https://picsum.photos/seed/user/100/100" data-ai-hint="male portrait" />
-                )}
-                <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                <AvatarImage src="https://picsum.photos/seed/user/100/100" data-ai-hint="male portrait" />
+                <AvatarFallback>U</AvatarFallback>
               </Avatar>
               <div className="overflow-hidden group-data-[collapsible=icon]:hidden">
-                <p className="font-semibold truncate">{user.displayName || 'Usuário'}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                <p className="font-semibold truncate">Usuário</p>
+                <p className="text-xs text-muted-foreground truncate">usuario@email.com</p>
               </div>
             </div>
           </SidebarFooter>

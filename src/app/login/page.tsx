@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 export default function LoginPage() {
   const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
@@ -19,50 +18,32 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const auth = getAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
+    // This is a mock login. In a real app, you'd validate credentials.
+    setTimeout(() => {
       toast({
         title: 'Login bem-sucedido!',
         description: 'Redirecionando para o seu dashboard.',
       });
       router.push('/dashboard');
-    } catch (error: any) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro no Login',
-        description: 'Email ou senha inválidos. Por favor, tente novamente.',
-      });
-    } finally {
       setIsLoading(false);
-    }
+    }, 500);
   };
   
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setIsLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      toast({
-        title: 'Login com Google bem-sucedido!',
-        description: 'Redirecionando para o seu dashboard.',
-      });
-      router.push('/dashboard');
-    } catch (error: any) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro no Login com Google',
-        description: 'Não foi possível fazer login com o Google. Tente novamente.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // This is a mock login.
+    setTimeout(() => {
+        toast({
+            title: 'Login com Google bem-sucedido!',
+            description: 'Redirecionando para o seu dashboard.',
+        });
+        router.push('/dashboard');
+        setIsLoading(false);
+    }, 500)
   }
 
 
@@ -110,7 +91,7 @@ export default function LoginPage() {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
-            <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isLoading}>
+            <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin} disabled={isLoading}>
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
