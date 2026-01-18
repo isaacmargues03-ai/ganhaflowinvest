@@ -1,50 +1,91 @@
 'use client';
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { machines } from "@/lib/data";
-import { Gem } from "lucide-react";
+import { Gem, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useInvestments } from "@/context/investments-context";
-import type { Machine } from '@/lib/types';
+import type { Machine, UserProfile } from '@/lib/types';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, runTransaction, serverTimestamp, collection, addDoc } from "firebase/firestore";
 
 export default function MachinesPage() {
   const { toast } = useToast();
-  const { addUserInvestment } = useInvestments();
-  const [balance, setBalance] = useState(0);
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
 
-  // Function to refresh balance from localStorage
-  const refreshBalance = () => {
-    const currentBalance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
-    setBalance(currentBalance);
-  }
+  const { data: userData, isLoading: isUserDataLoading, error } = useDoc<UserProfile>(userDocRef);
 
-  useEffect(() => {
-    refreshBalance();
-  }, []);
+  const balance = userData?.balance ?? 0;
 
-  const handleRent = (machine: Machine) => {
-    const currentBalance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
-    if (currentBalance < machine.price) {
-      toast({
-        variant: "destructive",
-        title: "Saldo Insuficiente",
-        description: `Você precisa de R$ ${machine.price.toFixed(2)} para alugar esta máquina. Seu saldo é R$ ${currentBalance.toFixed(2)}.`,
-      });
-      return;
+  const handleRent = async (machine: Machine) => {
+    if (!firestore || !user) {
+        toast({ variant: "destructive", title: "Erro", description: "Usuário não autenticado." });
+        return;
     }
 
-    const newBalance = currentBalance - machine.price;
-    window.localStorage.setItem('ganhaflow_balance', String(newBalance));
-    refreshBalance(); // Update state locally
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const userDoc = await transaction.get(userDocRef!);
+            if (!userDoc.exists()) {
+                throw "Documento do usuário não existe!";
+            }
 
-    addUserInvestment(machine);
-    toast({
-      title: "Máquina Alugada!",
-      description: `Você alugou a máquina ${machine.name} com sucesso.`,
-    });
+            const currentBalance = userDoc.data().balance;
+            if (currentBalance < machine.price) {
+                throw "Saldo Insuficiente";
+            }
+            
+            const newBalance = currentBalance - machine.price;
+            transaction.update(userDocRef!, { balance: newBalance });
+
+            const investmentsCollectionRef = collection(firestore, 'users', user.uid, 'investments');
+            const newInvestment = {
+                machineId: machine.id,
+                purchaseDate: serverTimestamp(),
+                machineName: machine.name,
+                machinePrice: machine.price,
+                machineTotalReturn: machine.totalReturn,
+                machineCycleDays: machine.cycleDays,
+            };
+            transaction.set(doc(investmentsCollectionRef), newInvestment);
+        });
+
+        toast({
+            title: "Máquina Alugada!",
+            description: `Você alugou a máquina ${machine.name} com sucesso.`,
+        });
+
+    } catch (e: any) {
+        console.error("Falha ao alugar máquina:", e);
+        if (e === "Saldo Insuficiente") {
+             toast({
+                variant: "destructive",
+                title: "Saldo Insuficiente",
+                description: `Você precisa de R$ ${machine.price.toFixed(2)} para alugar esta máquina.`,
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Erro na Transação",
+                description: "Não foi possível alugar a máquina. Tente novamente.",
+            });
+        }
+    }
   };
+
+  if (isUserLoading || isUserDataLoading) {
+      return (
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </main>
+      )
+  }
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">

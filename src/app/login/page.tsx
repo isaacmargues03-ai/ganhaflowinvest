@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useAuth, useUser } from '@/firebase';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, AuthError } from 'firebase/auth';
 
 export default function LoginPage() {
   const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
@@ -18,34 +20,70 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // This is a mock login. In a real app, you'd validate credentials.
-    setTimeout(() => {
+    if (!auth) return;
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       toast({
         title: 'Login bem-sucedido!',
         description: 'Redirecionando para o seu dashboard.',
       });
       router.push('/dashboard');
+    } catch (error) {
+      console.error(error);
+      const authError = error as AuthError;
+      toast({
+        variant: 'destructive',
+        title: 'Erro no Login',
+        description: 'Credenciais inválidas. Verifique seu e-mail e senha.',
+      });
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
   
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
-    // This is a mock login.
-    setTimeout(() => {
-        toast({
+    if (!auth) return;
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+       toast({
             title: 'Login com Google bem-sucedido!',
             description: 'Redirecionando para o seu dashboard.',
         });
-        router.push('/dashboard');
+      router.push('/dashboard');
+    } catch (error) {
+       console.error(error);
+       toast({
+        variant: 'destructive',
+        title: 'Erro no Login com Google',
+        description: 'Não foi possível fazer login com o Google.',
+      });
+    } finally {
         setIsLoading(false);
-    }, 500)
+    }
   }
 
+  if (isUserLoading || user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">

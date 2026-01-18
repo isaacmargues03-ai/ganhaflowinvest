@@ -7,12 +7,30 @@ import { ptBR } from 'date-fns/locale';
 import { Gem, Calendar, CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useInvestments } from "@/context/investments-context";
 import { useEffect, useState } from "react";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, Timestamp } from "firebase/firestore";
+import type { UserInvestment } from "@/lib/types";
+
+// Helper to convert Firestore Timestamp to Date
+const toDate = (timestamp: Timestamp | Date): Date => {
+  if (timestamp instanceof Timestamp) {
+    return timestamp.toDate();
+  }
+  return timestamp;
+};
 
 export default function MyMachinesPage() {
-  const { userInvestments, isLoading } = useInvestments();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  const investmentsCollectionRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'investments');
+  }, [firestore, user]);
+  
+  const { data: userInvestments, isLoading: isInvestmentsLoading } = useCollection<UserInvestment>(investmentsCollectionRef);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -22,7 +40,7 @@ export default function MyMachinesPage() {
     return () => clearInterval(timer); // Cleanup interval on component unmount
   }, []);
 
-  if (isLoading) {
+  if (isUserLoading || isInvestmentsLoading) {
     return (
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="mb-8">
@@ -48,17 +66,17 @@ export default function MyMachinesPage() {
         <p className="text-muted-foreground">Acompanhe o progresso dos seus investimentos.</p>
       </div>
 
-      {userInvestments.length > 0 ? (
+      {userInvestments && userInvestments.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {userInvestments.map((investment) => {
-            if (!investment || !investment.machine || !investment.purchaseDate) {
+            if (!investment || !investment.purchaseDate) {
               return null;
             }
             
-            const purchaseDate = new Date(investment.purchaseDate);
-            const endDate = add(purchaseDate, { days: investment.machine.cycleDays });
+            const purchaseDate = toDate(investment.purchaseDate);
+            const endDate = add(purchaseDate, { days: investment.machineCycleDays });
             
-            const totalCycleSeconds = investment.machine.cycleDays * 24 * 60 * 60;
+            const totalCycleSeconds = investment.machineCycleDays * 24 * 60 * 60;
             const secondsPassed = differenceInSeconds(currentTime, purchaseDate);
             
             const progress = Math.min(100, (secondsPassed / totalCycleSeconds) * 100);
@@ -69,7 +87,7 @@ export default function MyMachinesPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <Gem className="text-primary" />
-                    {investment.machine.name}
+                    {investment.machineName}
                   </CardTitle>
                   <CardDescription>
                     Investido em: {format(purchaseDate, "dd 'de' MMMM, yyyy, HH:mm", { locale: ptBR })}
@@ -102,11 +120,11 @@ export default function MyMachinesPage() {
                     <div className="flex justify-between items-baseline pt-2">
                         <div className="text-center">
                             <p className="text-xs text-muted-foreground">Investimento</p>
-                            <p className="font-bold text-accent">R$ {investment.machine.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                            <p className="font-bold text-accent">R$ {investment.machinePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                         </div>
                          <div className="text-center">
                             <p className="text-xs text-muted-foreground">Retorno</p>
-                            <p className="text-2xl font-bold text-primary">R$ {investment.machine.totalReturn.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                            <p className="text-2xl font-bold text-primary">R$ {investment.machineTotalReturn.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                         </div>
                     </div>
                   </div>

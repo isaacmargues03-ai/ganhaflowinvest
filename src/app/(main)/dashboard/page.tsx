@@ -1,17 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
+import type { UserProfile } from "@/lib/types";
 
 export default function DashboardPage() {
-  const [availableBalance, setAvailableBalance] = useState(0);
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    const balance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
-    setAvailableBalance(balance);
-  }, []);
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userData, isLoading: isUserDataLoading } = useDoc<UserProfile>(userDocRef);
+
+  const availableBalance = userData?.balance ?? 0;
+
+  if (isUserLoading || isUserDataLoading) {
+    return (
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </main>
+    )
+  }
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
@@ -30,7 +45,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold">R$ {availableBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-            <p className="text-xs text-muted-foreground mt-1">Atualizado ao carregar a página.</p>
+            <p className="text-xs text-muted-foreground mt-1">Seu saldo em tempo real.</p>
           </CardContent>
         </Card>
 

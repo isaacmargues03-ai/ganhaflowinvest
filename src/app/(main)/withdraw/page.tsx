@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,18 +8,27 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 export default function WithdrawPage() {
-  const [availableBalance, setAvailableBalance] = useState(0);
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const [withdrawAmount, setWithdrawAmount] = useState<number|string>('');
   const { toast } = useToast();
+  
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
 
-  useEffect(() => {
-    const balance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
-    setAvailableBalance(balance);
-  }, []);
+  const { data: userData, isLoading: isUserDataLoading, error } = useDoc<UserProfile>(userDocRef);
 
-  const handleWithdraw = () => {
+  const availableBalance = userData?.balance ?? 0;
+
+  const handleWithdraw = async () => {
     const amountToWithdraw = Number(withdrawAmount);
     if (isNaN(amountToWithdraw) || amountToWithdraw <= 0) {
         toast({
@@ -37,17 +46,35 @@ export default function WithdrawPage() {
       });
       return;
     }
-    
-    const newBalance = availableBalance - amountToWithdraw;
-    window.localStorage.setItem('ganhaflow_balance', String(newBalance));
-    setAvailableBalance(newBalance);
-    setWithdrawAmount('');
+    if (!userDocRef) return;
 
-    toast({
-      title: "Solicitação de Saque Enviada",
-      description: "Sua solicitação de saque foi enviada. O saldo foi deduzido da sua conta.",
-    });
+    try {
+      const newBalance = availableBalance - amountToWithdraw;
+      await updateDoc(userDocRef, { balance: newBalance });
+      setWithdrawAmount('');
+
+      toast({
+        title: "Solicitação de Saque Enviada",
+        description: `Sua solicitação de R$ ${amountToWithdraw.toFixed(2)} foi enviada. O valor será creditado na sua chave PIX em breve.`,
+      });
+
+    } catch (e) {
+      console.error("Erro ao solicitar saque:", e);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível processar seu saque. Fale com o suporte.",
+      });
+    }
   };
+  
+   if (isUserLoading || isUserDataLoading) {
+    return (
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </main>
+    )
+  }
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 flex items-center justify-center">

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useAuth, useUser, useFirestore } from '@/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function SignupPage() {
   const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
@@ -19,20 +22,60 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
 
-  const handleSignup = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // This is a mock signup. In a real app, you'd create a user.
-    setTimeout(() => {
+    if (!auth || !firestore) return;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+
+      await updateProfile(firebaseUser, { displayName: name });
+      
+      const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+      await setDoc(userDocRef, {
+        uid: firebaseUser.uid,
+        name: name,
+        email: email,
+        balance: 0, // Initial balance
+        createdAt: serverTimestamp(),
+      });
+      
+      toast({
+          title: 'Conta criada com sucesso!',
+          description: 'Redirecionando para o seu dashboard.',
+      });
+      router.push('/dashboard');
+    } catch (error) {
+        console.error(error);
         toast({
-            title: 'Conta criada com sucesso!',
-            description: 'Redirecionando para o seu dashboard.',
+            variant: 'destructive',
+            title: 'Erro no Cadastro',
+            description: 'Não foi possível criar sua conta. Verifique os dados ou tente novamente.',
         });
-        router.push('/dashboard');
+    } finally {
         setIsLoading(false);
-    }, 500);
+    }
   };
+  
+  if (isUserLoading || user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">

@@ -1,45 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, TicketPlus, Trash2, Shield } from 'lucide-react';
+import { Copy, TicketPlus, Trash2, Shield, Loader2 } from 'lucide-react';
 import type { Token } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { useFirestore, useCollection } from '@/firebase';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
 
 export default function AdminPage() {
   const { toast } = useToast();
-  const [tokens, setTokens] = useState<Token[]>([]);
+  const firestore = useFirestore();
   const [amount, setAmount] = useState<number | string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  const tokensCollection = collection(firestore, 'tokens');
+  const { data: tokens, isLoading, error } = useCollection<Token>(tokensCollection);
 
-  useEffect(() => {
-    setIsLoading(true);
-    try {
-      const storedTokens = window.localStorage.getItem('ganhaflow_tokens');
-      if (storedTokens) {
-        setTokens(JSON.parse(storedTokens));
-      }
-    } catch (error) {
-      console.error("Failed to load tokens from localStorage", error);
-    }
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      try {
-        window.localStorage.setItem('ganhaflow_tokens', JSON.stringify(tokens));
-      } catch (error) {
-        console.error("Failed to save tokens to localStorage", error);
-      }
-    }
-  }, [tokens, isLoading]);
-
-  const generateToken = () => {
+  const generateToken = async () => {
     if (typeof amount !== 'number' || amount <= 0) {
       toast({
         variant: "destructive",
@@ -48,20 +30,34 @@ export default function AdminPage() {
       });
       return;
     }
+    setIsGenerating(true);
+    try {
+      const newId = `GANHAFLOW-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+      const newToken: Omit<Token, 'id'> = {
+        value: amount,
+        isRedeemed: false,
+        code: newId,
+        redeemedBy: null,
+        redeemedAt: null,
+      };
 
-    const newId = `GANHAFLOW-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
-    const newToken: Token = {
-      id: newId,
-      value: amount,
-      isRedeemed: false,
-    };
+      await addDoc(tokensCollection, newToken);
 
-    setTokens(prev => [newToken, ...prev]);
-    setAmount('');
-    toast({
-      title: "Token Gerado!",
-      description: `Token ${newId} de R$ ${Number(amount).toFixed(2)} foi criado.`,
-    });
+      setAmount('');
+      toast({
+        title: "Token Gerado!",
+        description: `Token ${newId} de R$ ${Number(amount).toFixed(2)} foi criado.`,
+      });
+    } catch (e) {
+      console.error("Erro ao gerar token:", e);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível gerar o token.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -72,21 +68,31 @@ export default function AdminPage() {
     });
   };
 
-  const deleteToken = (tokenId: string) => {
-    setTokens(tokens.filter(t => t.id !== tokenId));
-    toast({
+  const deleteToken = async (tokenId: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, 'tokens', tokenId));
+      toast({
         variant: 'destructive',
         title: 'Token Removido',
-        description: `O token foi removido da lista.`,
-    });
+        description: `O token foi removido com sucesso.`,
+      });
+    } catch (e) {
+       console.error("Erro ao remover token:", e);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível remover o token.",
+      });
+    }
   }
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Shield className="text-primary"/>
-            Painel do Administrador
+          <Shield className="text-primary"/>
+          Painel do Administrador
         </h1>
         <p className="text-muted-foreground">Gere e gerencie os tokens de recarga.</p>
       </div>
@@ -106,9 +112,12 @@ export default function AdminPage() {
                   placeholder="Ex: 50" 
                   value={amount}
                   onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                  disabled={isGenerating}
                 />
               </div>
-              <Button onClick={generateToken} className="w-full">Gerar Token</Button>
+              <Button onClick={generateToken} className="w-full" disabled={isGenerating}>
+                {isGenerating ? <Loader2 className="animate-spin" /> : 'Gerar Token'}
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -122,12 +131,14 @@ export default function AdminPage() {
             <CardContent>
               {isLoading ? (
                 <p>Carregando tokens...</p>
-              ) : tokens.length > 0 ? (
+              ) : error ? (
+                <p className="text-destructive">Erro ao carregar os tokens.</p>
+              ) : tokens && tokens.length > 0 ? (
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                   {tokens.map(token => (
                     <div key={token.id} className="flex items-center justify-between gap-4 rounded-lg border p-3">
                       <div className="font-mono text-sm">
-                        <p className="font-bold">{token.id}</p>
+                        <p className="font-bold">{token.code}</p>
                         <p className="text-muted-foreground">Valor: R$ {token.value.toFixed(2)}</p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -136,7 +147,7 @@ export default function AdminPage() {
                         ) : (
                           <Badge variant="outline" className="border-green-500 text-green-500">Disponível</Badge>
                         )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyToClipboard(token.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyToClipboard(token.code)}>
                           <Copy className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteToken(token.id)}>

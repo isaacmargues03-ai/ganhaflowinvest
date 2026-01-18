@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export interface Machine {
   id: string;
   name: string;
@@ -8,19 +10,27 @@ export interface Machine {
 
 export interface UserInvestment {
   id: string;
-  machine: Machine;
-  purchaseDate: Date;
+  machineId: string;
+  purchaseDate: Date | Timestamp;
+  machineName: string;
+  machinePrice: number;
+  machineTotalReturn: number;
+  machineCycleDays: number;
 }
 
 export interface Token {
   id: string;
+  code: string;
   value: number;
   isRedeemed: boolean;
+  redeemedBy: string | null;
+  redeemedAt: Timestamp | null;
 }
 
 export interface UserProfile {
-  id: string;
+  uid: string;
   name: string;
   email: string;
   balance: number;
+  createdAt: Timestamp;
 }

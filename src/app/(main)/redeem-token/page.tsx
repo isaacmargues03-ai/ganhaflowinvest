@@ -5,60 +5,90 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Ticket } from 'lucide-react';
-import type { Token } from '@/lib/types';
+import { Ticket, Loader2 } from 'lucide-react';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, query, where, getDocs, doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 
 export default function RedeemTokenPage() {
-  const [token, setToken] = useState('');
+  const [tokenCode, setTokenCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
 
-  const handleRedeem = () => {
-    if (!token.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Por favor, insira um token válido.",
-      });
+  const handleRedeem = async () => {
+    if (!tokenCode.trim()) {
+      toast({ variant: "destructive", title: "Erro", description: "Por favor, insira um token válido." });
+      return;
+    }
+    if (!firestore || !user) {
+      toast({ variant: "destructive", title: "Erro", description: "Serviço indisponível ou usuário não logado." });
       return;
     }
 
+    setIsLoading(true);
+    const tokensRef = collection(firestore, 'tokens');
+    const q = query(tokensRef, where("code", "==", tokenCode.trim()));
+
     try {
-      const storedTokens = window.localStorage.getItem('ganhaflow_tokens');
-      let tokens: Token[] = storedTokens ? JSON.parse(storedTokens) : [];
-      
-      const tokenToRedeem = tokens.find(t => t.id === token.trim() && !t.isRedeemed);
+      const querySnapshot = await getDocs(q);
 
-      if (tokenToRedeem) {
-        // Mark token as redeemed
-        const updatedTokens = tokens.map(t => 
-          t.id === tokenToRedeem.id ? { ...t, isRedeemed: true } : t
-        );
-        window.localStorage.setItem('ganhaflow_tokens', JSON.stringify(updatedTokens));
-
-        // Update balance
-        const currentBalance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
-        const newBalance = currentBalance + tokenToRedeem.value;
-        window.localStorage.setItem('ganhaflow_balance', String(newBalance));
-
-        toast({
-          title: "Token Resgatado!",
-          description: `R$ ${tokenToRedeem.value.toFixed(2)} foram adicionados ao seu saldo.`,
-        });
-        setToken('');
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Token Inválido",
-          description: "O token inserido não é válido, já foi usado ou não existe.",
-        });
+      if (querySnapshot.empty) {
+        toast({ variant: "destructive", title: "Token Inválido", description: "O token inserido não existe." });
+        setIsLoading(false);
+        return;
       }
-    } catch (error) {
+
+      const tokenDoc = querySnapshot.docs[0];
+      const tokenData = tokenDoc.data();
+
+      if (tokenData.isRedeemed) {
+        toast({ variant: "destructive", title: "Token Já Utilizado", description: "Este token já foi resgatado." });
+        setIsLoading(false);
+        return;
+      }
+      
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const tokenDocRef = doc(firestore, 'tokens', tokenDoc.id);
+
+      await runTransaction(firestore, async (transaction) => {
+        const freshTokenDoc = await transaction.get(tokenDocRef);
+        const freshUserDoc = await transaction.get(userDocRef);
+
+        if (!freshTokenDoc.exists() || freshTokenDoc.data().isRedeemed) {
+          throw new Error("Token já utilizado ou inválido.");
+        }
+        if (!freshUserDoc.exists()) {
+          throw new Error("Usuário não encontrado.");
+        }
+
+        const tokenValue = freshTokenDoc.data().value;
+        const currentBalance = freshUserDoc.data().balance;
+        const newBalance = currentBalance + tokenValue;
+
+        transaction.update(userDocRef, { balance: newBalance });
+        transaction.update(tokenDocRef, { 
+          isRedeemed: true,
+          redeemedBy: user.uid,
+          redeemedAt: serverTimestamp()
+        });
+      });
+
+      toast({
+        title: "Token Resgatado!",
+        description: `R$ ${tokenData.value.toFixed(2)} foram adicionados ao seu saldo.`,
+      });
+      setTokenCode('');
+
+    } catch (error: any) {
       console.error("Failed to redeem token", error);
       toast({
         variant: "destructive",
-        title: "Erro no Sistema",
-        description: "Não foi possível resgatar o token. Tente novamente mais tarde.",
+        title: "Erro no Resgate",
+        description: error.message || "Não foi possível resgatar o token. Tente novamente mais tarde.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,13 +105,16 @@ export default function RedeemTokenPage() {
         <CardContent>
           <Input 
             placeholder="Seu token de recarga"
-            value={token}
-            onChange={(e) => setToken(e.target.value.toUpperCase())}
+            value={tokenCode}
+            onChange={(e) => setTokenCode(e.target.value.toUpperCase())}
             className="uppercase"
+            disabled={isLoading}
           />
         </CardContent>
         <CardFooter>
-          <Button className="w-full" onClick={handleRedeem}>Resgatar</Button>
+          <Button className="w-full" onClick={handleRedeem} disabled={isLoading}>
+            {isLoading ? <Loader2 className="animate-spin" /> : 'Resgatar'}
+          </Button>
         </CardFooter>
       </Card>
     </main>
