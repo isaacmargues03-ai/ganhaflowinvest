@@ -20,7 +20,6 @@ import {
   Gem,
   LayoutDashboard,
   LogOut,
-  Microscope,
   PiggyBank,
   Wallet,
   LifeBuoy,
@@ -36,7 +35,6 @@ const navItems = [
   { href: '/deposit', icon: PiggyBank, label: 'Recarregar' },
   { href: '/redeem-token', icon: Ticket, label: 'Resgatar Token' },
   { href: '/withdraw', icon: DollarSign, label: 'Saque' },
-  { href: '/analysis', icon: Microscope, label: 'Análise IA' },
   { href: '/support', icon: LifeBuoy, label: 'Suporte' },
 ];
 
