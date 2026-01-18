@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, AuthError } from 'firebase/auth';
+import { useAuth, useUser, useFirestore } from '@/firebase';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, AuthError, getAdditionalUserInfo } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function LoginPage() {
   const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
@@ -56,10 +58,25 @@ export default function LoginPage() {
   
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    if (!auth) return;
+    if (!auth || !firestore) return;
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const additionalInfo = getAdditionalUserInfo(result);
+      const user = result.user;
+
+      // Check if it's a new user and create a document in Firestore
+      if (additionalInfo?.isNewUser) {
+        const userDocRef = doc(firestore, 'users', user.uid);
+        await setDoc(userDocRef, {
+            uid: user.uid,
+            name: user.displayName,
+            email: user.email,
+            balance: 0,
+            createdAt: serverTimestamp(),
+        });
+      }
+
        toast({
             title: 'Login com Google bem-sucedido!',
             description: 'Redirecionando para o seu dashboard.',
