@@ -1,102 +1,287 @@
 {
   "entities": {
-    "UserProfile": {
-      "title": "User Profile",
-      "description": "Represents a user's public profile.",
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
       "type": "object",
+      "description": "Represents a user of the GanhaFlow Invest platform.",
       "properties": {
-        "name": {
+        "id": {
           "type": "string",
-          "description": "The user's full name."
+          "description": "Unique identifier for the user entity."
         },
         "email": {
           "type": "string",
-          "format": "email",
-          "description": "The user's email address."
+          "description": "Email address of the user.",
+          "format": "email"
         },
-        "balance": {
+        "accountStatus": {
+          "type": "string",
+          "description": "Status of the user's account (e.g., Active, Inactive)."
+        },
+        "availableBalance": {
           "type": "number",
-          "description": "The user's available balance."
+          "description": "The user's available balance for investments."
         }
       },
       "required": [
-        "name",
-        "email"
+        "id",
+        "email",
+        "accountStatus",
+        "availableBalance"
       ]
     },
-    "Token": {
-      "title": "Redemption Token",
-      "description": "A token that can be redeemed for balance.",
+    "InvestmentMachine": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InvestmentMachine",
       "type": "object",
+      "description": "Represents an investment machine available on the platform.",
       "properties": {
-        "value": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the investment machine."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the investment machine (e.g., Bronze, Silver, Gold)."
+        },
+        "investmentAmount": {
           "type": "number",
-          "description": "The monetary value of the token."
+          "description": "The amount required to invest in this machine."
         },
-        "isRedeemed": {
-          "type": "boolean",
-          "description": "Whether the token has been redeemed."
+        "returnAmount": {
+          "type": "number",
+          "description": "The amount returned after the investment cycle."
         },
-        "redeemedBy": {
-          "type": "string",
-          "description": "The UID of the user who redeemed the token."
-        },
-        "redeemedAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the token was redeemed."
+        "cycleDurationDays": {
+          "type": "number",
+          "description": "The duration of the investment cycle in days."
         }
       },
       "required": [
-        "value",
-        "isRedeemed"
+        "id",
+        "name",
+        "investmentAmount",
+        "returnAmount",
+        "cycleDurationDays"
       ]
     },
     "UserInvestment": {
-      "title": "User Investment",
-      "description": "Represents a machine rented by a user.",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserInvestment",
       "type": "object",
+      "description": "Represents a user's investment in a specific machine.",
       "properties": {
-        "machineId": {
+        "id": {
           "type": "string",
-          "description": "The ID of the rented machine."
+          "description": "Unique identifier for the user investment."
         },
-        "purchaseDate": {
+        "userId": {
           "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the machine was rented."
+          "description": "Reference to User. (Relationship: User 1:N UserInvestment)"
+        },
+        "investmentMachineId": {
+          "type": "string",
+          "description": "Reference to InvestmentMachine. (Relationship: InvestmentMachine 1:N UserInvestment)"
+        },
+        "investmentDate": {
+          "type": "string",
+          "description": "The date when the investment was made.",
+          "format": "date-time"
+        },
+        "returnDate": {
+          "type": "string",
+          "description": "The date when the investment is expected to return.",
+          "format": "date-time"
+        },
+        "returned": {
+          "type": "boolean",
+          "description": "Indicates whether the investment has returned the funds."
         }
       },
       "required": [
-        "machineId",
-        "purchaseDate"
+        "id",
+        "userId",
+        "investmentMachineId",
+        "investmentDate",
+        "returnDate",
+        "returned"
+      ]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a deposit or withdrawal transaction.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transaction."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Transaction)"
+        },
+        "transactionType": {
+          "type": "string",
+          "description": "Type of transaction (e.g., Deposit, Withdrawal)."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction."
+        },
+        "transactionDate": {
+          "type": "string",
+          "description": "The date and time of the transaction.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "transactionType",
+        "amount",
+        "transactionDate"
+      ]
+    },
+    "Token": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Token",
+      "type": "object",
+      "description": "Represents a token granted to a user, which can be used for specific actions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the token."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Token)"
+        },
+        "tokenValue": {
+          "type": "string",
+          "description": "The actual token value."
+        },
+        "expirationDate": {
+          "type": "string",
+          "description": "The date and time when the token expires.",
+          "format": "date-time"
+        },
+        "used": {
+          "type": "boolean",
+          "description": "Indicates whether the token has been used."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "tokenValue",
+        "expirationDate",
+        "used"
       ]
     }
   },
   "auth": {
     "providers": [
       "password",
-      "google.com"
+      "anonymous"
     ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": {
-        "$ref": "#/entities/UserProfile"
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Account status and available balance are stored here.  Path-based ownership enforced via the `userId` parameter.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
       },
-      "description": "Stores public information for each user."
-    },
-    "/tokens/{tokenId}": {
-      "schema": {
-        "$ref": "#/entities/Token"
+      {
+        "path": "/investmentMachines/{investmentMachineId}",
+        "definition": {
+          "entityName": "InvestmentMachine",
+          "schema": {
+            "$ref": "#/backend/entities/InvestmentMachine"
+          },
+          "description": "Stores information about available investment machines on the platform.",
+          "params": [
+            {
+              "name": "investmentMachineId",
+              "description": "The unique identifier for the investment machine."
+            }
+          ]
+        }
       },
-      "description": "Stores all redemption tokens."
-    },
-    "/users/{userId}/investments/{investmentId}": {
-      "schema": {
-        "$ref": "#/entities/UserInvestment"
+      {
+        "path": "/users/{userId}/investments/{userInvestmentId}",
+        "definition": {
+          "entityName": "UserInvestment",
+          "schema": {
+            "$ref": "#/backend/entities/UserInvestment"
+          },
+          "description": "Stores information about a user's investment in a specific machine. Path-based ownership enforced via the `userId` parameter.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "userInvestmentId",
+              "description": "The unique identifier for the user investment."
+            }
+          ]
+        }
       },
-      "description": "Stores the investments for a specific user."
-    }
+      {
+        "path": "/users/{userId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Stores transaction history for a user (deposits and withdrawals). Path-based ownership enforced via the `userId` parameter.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique identifier for the transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/tokens/{tokenId}",
+        "definition": {
+          "entityName": "Token",
+          "schema": {
+            "$ref": "#/backend/entities/Token"
+          },
+          "description": "Stores tokens generated for the user for specific actions. Path-based ownership enforced via the `userId` parameter.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "tokenId",
+              "description": "The unique identifier for the token."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, adhering to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs.  It leverages structural segregation to maintain a homogeneous security posture within each collection. Authorization independence is achieved through path-based ownership where applicable, and denormalization of membership maps when necessary.\n\nUsers are stored in a top-level `/users` collection for easy management.  `InvestmentMachine` data is stored in a top-level `/investmentMachines` collection, assuming that these are globally available for all users. User-specific data like `UserInvestment` and `Transaction` are stored as subcollections under each user's document (`/users/{userId}/investments`, `/users/{userId}/transactions`), enforcing clear ownership and simplifying security rules.  `Token` data is stored in `/users/{userId}/tokens`. This path-based ownership enforces that only the user can read/write their tokens. \n\nThis structure supports QAPs by ensuring that listing operations are inherently secure due to path-based ownership. Security rules can easily restrict access based on the `request.auth.uid` without relying on complex filtering logic within the rules themselves."
   }
 }

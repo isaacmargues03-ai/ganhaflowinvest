@@ -1,29 +1,186 @@
+/**
+ * This ruleset enforces a strict user-ownership model for a financial investment platform.
+ * It ensures that all user-specific data, such as profiles, investments, transactions, and tokens,
+ * is completely private and can only be accessed by the authenticated owner.
+ *
+ * Core Philosophy:
+ * The security model is centered on user privacy and data isolation. A user's data is
+ * their own, and there is no concept of shared or public user data. The only exception
+ * is the list of available investment machines, which is public for all users to view.
+ *
+ * Data Structure:
+ * The data is organized hierarchically to enforce ownership via Firestore paths. All private
+ * user data (investments, transactions, tokens) is stored in subcollections under that
+ * specific user's document in the `/users/{userId}` path. This structural segregation
+ * makes the security rules simple, performant, and easy to audit.
+ *
+ * Key Security Decisions:
+ * - User Isolation: A user can only ever read or write data within their own document tree
+ *   (i.e., `/users/{their_own_uid}/...`).
+ * - No User Listing: To protect user privacy and prevent data scraping, it is impossible
+ *   to list all documents in the top-level `/users` collection.
+ * - Read-Only Public Data: The `/investmentMachines` collection is treated as global,
+ *   read-only configuration data. It is readable by anyone but cannot be modified by clients.
+ * - Path & Data Consistency: For all user-owned documents, rules enforce that the internal
+ *   `userId` field matches the `userId` in the document path, ensuring relational integrity.
+ *
+ * Denormalization for Authorization:
+ * This ruleset relies entirely on path-based authorization. By nesting a user's private
+ * collections under their user document (e.g., `/users/{userId}/investments`), we avoid
+ * costly and complex `get()` or `exists()` calls to other documents for authorization checks.
+ * The ownership is clear from the document's path itself.
+ *
+ * Structural Segregation:
+ * The design distinctly separates public data from private data. The top-level
+ * `/investmentMachines` collection is public, while the entire `/users/{userId}`
+ * tree is private. This clean separation prevents accidental data leakage and simplifies
+ * list queries, as any query on a user subcollection is inherently scoped to that user.
+ */
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is signed in.
+     */
     function isSignedIn() {
       return request.auth != null;
     }
 
+    /**
+     * Returns true if the requesting user's UID matches the provided userId.
+     * This is the primary function for checking document ownership.
+     */
     function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-    
-    // For now, anyone can read the list of tokens, but this should be locked down.
-    // Only admins should be able to create/update tokens.
-    // Users should only be able to "update" (redeem) a token once.
-    match /tokens/{tokenId} {
-      allow read, write: if isSignedIn();
+      return isSignedIn() && request.auth.uid == userId;
     }
 
+    /**
+     * Returns true if the user is the owner AND the document already exists.
+     * Used for safe update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the 'userId' field in a new document matches the owner's UID.
+     * Enforces relational integrity on creation.
+     */
+    function ownsCreatedDoc(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * Validates that the 'userId' field in a document is not being changed.
+     * Enforces immutability of the ownership link on update.
+     */
+    function isUserIdImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * Validates that the user's document 'id' field matches their UID.
+     * Enforces consistency between the document ID and its internal data.
+     */
+    function hasMatchingId(docId) {
+      return request.resource.data.id == docId;
+    }
+
+    /**
+     * Validates that a document's internal 'id' field is immutable on update.
+     */
+    function isDocIdImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user can create their own profile document.
+     * @allow (get, update, delete) An authenticated user can read, update, or delete their own profile.
+     * @deny (list) No user can list all other users in the system.
+     * @deny (get) A user cannot read another user's profile.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
     match /users/{userId} {
-      allow read, write: if isSignedIn() && isOwner(userId);
-      
-      match /investments/{investmentId} {
-        allow read, write: if isSignedIn() && isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasMatchingId(userId);
+      allow update: if isExistingOwner(userId) && isDocIdImmutable();
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Manages a user's private investment records.
+       * @path /users/{userId}/investments/{userInvestmentId}
+       * @allow (create, list) A user can create new investments and list their existing ones.
+       * @allow (get, update, delete) A user can read, update, or delete their own investment records.
+       * @deny (get) A user cannot access another user's investments.
+       * @principle Enforces strict document ownership within a user-specific subcollection.
+       */
+      match /investments/{userInvestmentId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && ownsCreatedDoc(userId);
+        allow update: if isExistingOwner(userId) && isUserIdImmutable();
+        allow delete: if isExistingOwner(userId);
       }
+
+      /**
+       * @description Manages a user's private transaction history.
+       * @path /users/{userId}/transactions/{transactionId}
+       * @allow (create, list) A user can create new transactions and list their own history.
+       * @allow (get, update, delete) A user can read, update, or delete their own transactions.
+       * @deny (get) A user cannot read another user's transaction history.
+       * @principle Enforces strict document ownership within a user-specific subcollection.
+       */
+      match /transactions/{transactionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && ownsCreatedDoc(userId);
+        allow update: if isExistingOwner(userId) && isUserIdImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages a user's private tokens.
+       * @path /users/{userId}/tokens/{tokenId}
+       * @allow (create, list) A user can create and list their own tokens.
+       * @allow (get, update, delete) A user can read, update, or delete their own tokens.
+       * @deny (get) A user cannot access tokens belonging to another user.
+       * @principle Enforces strict document ownership within a user-specific subcollection.
+       */
+      match /tokens/{tokenId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && ownsCreatedDoc(userId);
+        allow update: if isExistingOwner(userId) && isUserIdImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description Publicly readable list of available investment options.
+     * @path /investmentMachines/{investmentMachineId}
+     * @allow (get, list) Any user, including unauthenticated ones, can read the list of machines.
+     * @deny (create, update, delete) No client can modify the investment machines. They are managed by the backend.
+     * @principle Provides public read access for global configuration data while prohibiting all client writes.
+     */
+    match /investmentMachines/{investmentMachineId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
