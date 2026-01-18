@@ -5,9 +5,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 export default function WithdrawPage() {
   const availableBalance = 1234.56;
+  const { toast } = useToast();
+
+  const handleWithdraw = () => {
+    toast({
+      title: "Solicitação de Saque Enviada",
+      description: "Sua solicitação de saque foi enviada e será processada em breve.",
+    });
+  };
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
@@ -44,9 +54,15 @@ export default function WithdrawPage() {
             <Label htmlFor="pix-key">Chave PIX</Label>
             <Input id="pix-key" type="text" placeholder="Sua chave PIX" />
           </div>
+           <div className="text-center text-sm text-muted-foreground pt-2">
+            Problemas com o saque?{' '}
+            <Link href="/support" className="text-primary/80 hover:text-primary underline">
+              Fale com o suporte
+            </Link>
+          </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full">Solicitar Saque</Button>
+          <Button className="w-full" onClick={handleWithdraw}>Solicitar Saque</Button>
         </CardFooter>
       </Card>
     </main>

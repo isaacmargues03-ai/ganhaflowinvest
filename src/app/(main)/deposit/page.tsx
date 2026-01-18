@@ -1,11 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const predefinedAmounts = [10, 20, 50, 100, 200];
+const telegramSupportUrl = 'https://t.me/seu_suporte_aqui'; // Placeholder
 
 export default function DepositPage() {
   const [amount, setAmount] = useState<number | string>(50);
@@ -20,9 +24,20 @@ export default function DepositPage() {
       <Card className="w-full max-w-md shadow-lg border-accent/30 shadow-glow-accent">
         <CardHeader>
           <CardTitle className="text-2xl">Recarregar Saldo</CardTitle>
-          <CardDescription>Escolha um valor para depositar via PIX.</CardDescription>
+          <CardDescription>Escolha ou digite um valor para recarregar.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Como funciona a recarga?</AlertTitle>
+            <AlertDescription>
+              1. Entre em contato com nosso <Link href={telegramSupportUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline">suporte no Telegram</Link>.<br/>
+              2. Solicite a chave PIX para o valor desejado.<br/>
+              3. Envie o comprovante do pagamento.<br/>
+              4. Você receberá um token para resgatar seu saldo.
+            </AlertDescription>
+          </Alert>
+
           <div className="grid grid-cols-3 gap-4">
             {predefinedAmounts.map((predefinedAmount) => (
               <Button
@@ -47,7 +62,9 @@ export default function DepositPage() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full text-lg py-6 bg-accent text-accent-foreground hover:bg-accent/90">Gerar PIX</Button>
+          <Button className="w-full text-lg py-6 bg-accent text-accent-foreground hover:bg-accent/90" asChild>
+            <Link href={telegramSupportUrl} target="_blank" rel="noopener noreferrer">Contatar Suporte para Recarregar</Link>
+          </Button>
         </CardFooter>
       </Card>
     </main>

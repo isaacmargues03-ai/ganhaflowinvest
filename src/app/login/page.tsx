@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 
 export default function LoginPage() {
+  const telegramSupportUrl = 'https://t.me/seu_suporte_aqui'; // Placeholder
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="mx-auto w-full max-w-sm border-primary/20 shadow-glow-primary">
@@ -25,7 +27,7 @@ export default function LoginPage() {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Senha</Label>
-                <Link href="#" className="ml-auto inline-block text-sm text-primary/80 hover:text-primary underline">
+                <Link href={telegramSupportUrl} target="_blank" rel="noopener noreferrer" className="ml-auto inline-block text-sm text-primary/80 hover:text-primary underline">
                   Esqueceu sua senha?
                 </Link>
               </div>

@@ -1,9 +1,21 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { machines } from "@/lib/data";
 import { Gem } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MachinesPage() {
+  const { toast } = useToast();
+
+  const handleRent = (machineName: string) => {
+    toast({
+      title: "Máquina Alugada!",
+      description: `Você alugou a máquina ${machineName} com sucesso.`,
+    });
+  };
+
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
@@ -36,7 +48,7 @@ export default function MachinesPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full font-bold">Alugar Máquina</Button>
+              <Button className="w-full font-bold" onClick={() => handleRent(machine.name)}>Alugar Máquina</Button>
             </CardFooter>
           </Card>
         ))}

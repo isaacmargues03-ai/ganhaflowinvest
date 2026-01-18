@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 
 export default function SignupPage() {
+  const telegramSupportUrl = 'https://t.me/seu_suporte_aqui'; // Placeholder
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="mx-auto w-full max-w-sm border-primary/20 shadow-glow-primary">
@@ -34,11 +36,19 @@ export default function SignupPage() {
               <Link href="/dashboard">Criar conta</Link>
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            Já tem uma conta?{' '}
-            <Link href="/login" className="text-primary/80 hover:text-primary underline">
-              Login
-            </Link>
+          <div className="mt-4 text-center text-sm space-y-2">
+            <div>
+              Já tem uma conta?{' '}
+              <Link href="/login" className="text-primary/80 hover:text-primary underline">
+                Login
+              </Link>
+            </div>
+             <div>
+              Problemas ou dúvidas?{' '}
+              <Link href={telegramSupportUrl} target="_blank" rel="noopener noreferrer" className="text-primary/80 hover:text-primary underline">
+                Fale com o suporte
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

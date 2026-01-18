@@ -23,6 +23,8 @@ import {
   Microscope,
   PiggyBank,
   Wallet,
+  LifeBuoy,
+  Ticket,
 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
@@ -31,8 +33,10 @@ const navItems = [
   { href: '/machines', icon: Gem, label: 'Máquinas' },
   { href: '/my-machines', icon: Wallet, label: 'Minhas Máquinas' },
   { href: '/deposit', icon: PiggyBank, label: 'Recarregar' },
+  { href: '/redeem-token', icon: Ticket, label: 'Resgatar Token' },
   { href: '/withdraw', icon: DollarSign, label: 'Saque' },
   { href: '/analysis', icon: Microscope, label: 'Análise IA' },
+  { href: '/support', icon: LifeBuoy, label: 'Suporte' },
 ];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {

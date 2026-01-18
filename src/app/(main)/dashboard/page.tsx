@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Zap } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 export default function DashboardPage() {
   const availableBalance = 1234.56;
@@ -13,7 +13,7 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Visão geral da sua conta.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card className="shadow-lg border-primary/30">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Saldo Disponível</CardTitle>
@@ -38,18 +38,6 @@ export default function DashboardPage() {
               <Badge variant="default" className="bg-primary/20 text-primary border-primary/50">PRO</Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1">Todos os sistemas operando normalmente.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg border-accent/30">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Sistema de Token</CardTitle>
-            <Zap className="text-accent" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1 Token disponível</div>
-            <p className="text-xs text-muted-foreground mt-1">Use seu token para um bônus especial.</p>
-            <Button className="w-full mt-4 bg-accent text-accent-foreground hover:bg-accent/90">Usar Token</Button>
           </CardContent>
         </Card>
       </div>
