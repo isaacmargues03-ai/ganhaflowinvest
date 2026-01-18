@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 
 export default function SignupPage() {
-  const telegramSupportUrl = 'https://t.me/seu_suporte_aqui'; // Placeholder
+  const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
