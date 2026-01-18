@@ -42,7 +42,7 @@ const navItems = [
   { href: '/support', icon: LifeBuoy, label: 'Suporte' },
 ];
 
-const adminEmail = 'admin@ganhaflow.com';
+const adminEmail = 'diogof1736@gmail.com';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
