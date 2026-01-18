@@ -2,10 +2,12 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, Users } from "lucide-react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -60,6 +62,25 @@ export default function DashboardPage() {
               <Badge variant="default" className="bg-primary/20 text-primary border-primary/50">PRO</Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1">Todos os sistemas operando normalmente.</p>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="text-primary" />
+              Comunidade no Telegram
+            </CardTitle>
+            <CardDescription>
+              Junte-se à nossa comunidade para tirar dúvidas, ver novidades e interagir com outros investidores.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+             <Button asChild className="w-full">
+                <Link href="https://t.me/+r4XketJaOmlmZTAx" target="_blank" rel="noopener noreferrer">
+                    Entrar na Comunidade
+                </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
