@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { add, differenceInDays, format, formatDistanceToNow } from "date-fns";
+import { add, differenceInSeconds, format, formatDistance } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 import { Gem, Calendar, CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -11,14 +11,18 @@ import { useInvestments } from "@/context/investments-context";
 import { useEffect, useState } from "react";
 
 export default function MyMachinesPage() {
-  const { userInvestments } = useInvestments();
-  const [isClient, setIsClient] = useState(false);
+  const { userInvestments, isLoading } = useInvestments();
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    setIsClient(true);
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // Update time every second
+
+    return () => clearInterval(timer); // Cleanup interval on component unmount
   }, []);
 
-  if (!isClient) {
+  if (isLoading) {
     return (
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="mb-8">
@@ -50,10 +54,14 @@ export default function MyMachinesPage() {
             if (!investment || !investment.machine || !investment.purchaseDate) {
               return null;
             }
-
-            const endDate = add(new Date(investment.purchaseDate), { days: investment.machine.cycleDays });
-            const daysPassed = differenceInDays(new Date(), new Date(investment.purchaseDate));
-            const progress = Math.min(100, (daysPassed / investment.machine.cycleDays) * 100);
+            
+            const purchaseDate = new Date(investment.purchaseDate);
+            const endDate = add(purchaseDate, { days: investment.machine.cycleDays });
+            
+            const totalCycleSeconds = investment.machine.cycleDays * 24 * 60 * 60;
+            const secondsPassed = differenceInSeconds(currentTime, purchaseDate);
+            
+            const progress = Math.min(100, (secondsPassed / totalCycleSeconds) * 100);
             const isCompleted = progress >= 100;
             
             return (
@@ -64,7 +72,7 @@ export default function MyMachinesPage() {
                     {investment.machine.name}
                   </CardTitle>
                   <CardDescription>
-                    Investido em: {format(new Date(investment.purchaseDate), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                    Investido em: {format(purchaseDate, "dd 'de' MMMM, yyyy, HH:mm", { locale: ptBR })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
@@ -72,7 +80,7 @@ export default function MyMachinesPage() {
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm font-medium">Progresso do Ciclo</span>
-                        <span className="text-sm font-bold text-primary">{Math.round(progress)}%</span>
+                        <span className="text-sm font-bold text-primary">{progress.toFixed(2)}%</span>
                       </div>
                       <Progress value={progress} className="h-2" />
                     </div>
@@ -86,7 +94,7 @@ export default function MyMachinesPage() {
                         </span>
                       ) : (
                         <span>
-                          Retorno {formatDistanceToNow(endDate, { locale: ptBR, addSuffix: true })}
+                          Retorno {formatDistance(endDate, currentTime, { locale: ptBR, addSuffix: true })}
                         </span>
                       )}
                     </div>

@@ -7,6 +7,7 @@ import { machines } from '@/lib/data';
 interface InvestmentsContextType {
   userInvestments: UserInvestment[];
   addUserInvestment: (machine: Machine) => void;
+  isLoading: boolean;
 }
 
 const InvestmentsContext = createContext<InvestmentsContextType | undefined>(undefined);
@@ -38,20 +39,22 @@ const getInitialState = (): UserInvestment[] => {
 
 export const InvestmentsProvider = ({ children }: { children: ReactNode }) => {
   const [userInvestments, setUserInvestments] = useState<UserInvestment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setUserInvestments(getInitialState());
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    if (userInvestments.length > 0) {
+    if (!isLoading) {
         try {
             window.localStorage.setItem('userInvestments', JSON.stringify(userInvestments));
         } catch (error) {
             console.error('Error writing to localStorage', error);
         }
     }
-  }, [userInvestments]);
+  }, [userInvestments, isLoading]);
 
 
   const addUserInvestment = (machine: Machine) => {
@@ -64,7 +67,7 @@ export const InvestmentsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <InvestmentsContext.Provider value={{ userInvestments, addUserInvestment }}>
+    <InvestmentsContext.Provider value={{ userInvestments, addUserInvestment, isLoading }}>
       {children}
     </InvestmentsContext.Provider>
   );
