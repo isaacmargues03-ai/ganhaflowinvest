@@ -24,7 +24,6 @@ import {
   Wallet,
   LifeBuoy,
   Ticket,
-  TicketPlus,
 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { InvestmentsProvider } from '@/context/investments-context';
@@ -36,7 +35,6 @@ const navItems = [
   { href: '/deposit', icon: PiggyBank, label: 'Recarregar' },
   { href: '/redeem-token', icon: Ticket, label: 'Resgatar Token' },
   { href: '/withdraw', icon: DollarSign, label: 'Saque' },
-  { href: '/admin', icon: TicketPlus, label: 'Gerar Token' },
   { href: '/support', icon: LifeBuoy, label: 'Suporte' },
 ];
 
