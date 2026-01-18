@@ -6,23 +6,58 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Ticket } from 'lucide-react';
+import type { Token } from '@/lib/types';
 
 export default function RedeemTokenPage() {
   const [token, setToken] = useState('');
   const { toast } = useToast();
 
   const handleRedeem = () => {
-    if (token.trim()) {
-      toast({
-        title: "Token Resgatado!",
-        description: `O token "${token}" foi resgatado com sucesso. Seu saldo foi atualizado.`,
-      });
-      setToken('');
-    } else {
+    if (!token.trim()) {
       toast({
         variant: "destructive",
         title: "Erro",
         description: "Por favor, insira um token válido.",
+      });
+      return;
+    }
+
+    try {
+      const storedTokens = window.localStorage.getItem('ganhaflow_tokens');
+      let tokens: Token[] = storedTokens ? JSON.parse(storedTokens) : [];
+      
+      const tokenToRedeem = tokens.find(t => t.id === token.trim() && !t.isRedeemed);
+
+      if (tokenToRedeem) {
+        // Mark token as redeemed
+        const updatedTokens = tokens.map(t => 
+          t.id === tokenToRedeem.id ? { ...t, isRedeemed: true } : t
+        );
+        window.localStorage.setItem('ganhaflow_tokens', JSON.stringify(updatedTokens));
+
+        // Update balance
+        const currentBalance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
+        const newBalance = currentBalance + tokenToRedeem.value;
+        window.localStorage.setItem('ganhaflow_balance', String(newBalance));
+
+        toast({
+          title: "Token Resgatado!",
+          description: `R$ ${tokenToRedeem.value.toFixed(2)} foram adicionados ao seu saldo.`,
+        });
+        setToken('');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Token Inválido",
+          description: "O token inserido não é válido, já foi usado ou não existe.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to redeem token", error);
+      toast({
+        variant: "destructive",
+        title: "Erro no Sistema",
+        description: "Não foi possível resgatar o token. Tente novamente mais tarde.",
       });
     }
   };
@@ -41,7 +76,8 @@ export default function RedeemTokenPage() {
           <Input 
             placeholder="Seu token de recarga"
             value={token}
-            onChange={(e) => setToken(e.target.value)}
+            onChange={(e) => setToken(e.target.value.toUpperCase())}
+            className="uppercase"
           />
         </CardContent>
         <CardFooter>

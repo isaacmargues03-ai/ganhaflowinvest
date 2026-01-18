@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { machines } from "@/lib/data";
@@ -11,8 +12,33 @@ import type { Machine } from '@/lib/types';
 export default function MachinesPage() {
   const { toast } = useToast();
   const { addUserInvestment } = useInvestments();
+  const [balance, setBalance] = useState(0);
+
+  // Function to refresh balance from localStorage
+  const refreshBalance = () => {
+    const currentBalance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
+    setBalance(currentBalance);
+  }
+
+  useEffect(() => {
+    refreshBalance();
+  }, []);
 
   const handleRent = (machine: Machine) => {
+    const currentBalance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
+    if (currentBalance < machine.price) {
+      toast({
+        variant: "destructive",
+        title: "Saldo Insuficiente",
+        description: `Você precisa de R$ ${machine.price.toFixed(2)} para alugar esta máquina. Seu saldo é R$ ${currentBalance.toFixed(2)}.`,
+      });
+      return;
+    }
+
+    const newBalance = currentBalance - machine.price;
+    window.localStorage.setItem('ganhaflow_balance', String(newBalance));
+    refreshBalance(); // Update state locally
+
     addUserInvestment(machine);
     toast({
       title: "Máquina Alugada!",
@@ -22,10 +48,17 @@ export default function MachinesPage() {
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Máquinas de Investimento</h1>
-        <p className="text-muted-foreground">Escolha uma máquina para alugar e comece a ganhar.</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight">Máquinas de Investimento</h1>
+            <p className="text-muted-foreground">Escolha uma máquina para alugar e comece a ganhar.</p>
+        </div>
+        <div className="text-right">
+            <p className="text-sm text-muted-foreground">Seu Saldo</p>
+            <p className="text-2xl font-bold text-primary">R$ {balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+        </div>
       </div>
+
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {machines.map((machine) => (

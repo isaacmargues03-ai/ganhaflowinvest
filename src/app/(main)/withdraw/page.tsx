@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,13 +10,42 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 export default function WithdrawPage() {
-  const availableBalance = 1234.56;
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState<number|string>('');
   const { toast } = useToast();
 
+  useEffect(() => {
+    const balance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
+    setAvailableBalance(balance);
+  }, []);
+
   const handleWithdraw = () => {
+    const amountToWithdraw = Number(withdrawAmount);
+    if (isNaN(amountToWithdraw) || amountToWithdraw <= 0) {
+        toast({
+            variant: "destructive",
+            title: "Valor Inválido",
+            description: "Por favor, insira um valor de saque válido.",
+        });
+        return;
+    }
+    if (amountToWithdraw > availableBalance) {
+      toast({
+        variant: "destructive",
+        title: "Saldo Insuficiente",
+        description: "Você não tem saldo suficiente para este saque.",
+      });
+      return;
+    }
+    
+    const newBalance = availableBalance - amountToWithdraw;
+    window.localStorage.setItem('ganhaflow_balance', String(newBalance));
+    setAvailableBalance(newBalance);
+    setWithdrawAmount('');
+
     toast({
       title: "Solicitação de Saque Enviada",
-      description: "Sua solicitação de saque foi enviada e será processada em breve.",
+      description: "Sua solicitação de saque foi enviada. O saldo foi deduzido da sua conta.",
     });
   };
 
@@ -33,7 +63,14 @@ export default function WithdrawPage() {
             <Label htmlFor="amount">Valor do Saque</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-              <Input id="amount" type="number" placeholder="0,00" className="pl-10"/>
+              <Input 
+                id="amount" 
+                type="number" 
+                placeholder="0,00" 
+                className="pl-10"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value === '' ? '' : Number(e.target.value))}
+              />
             </div>
           </div>
           <div className="grid gap-2">

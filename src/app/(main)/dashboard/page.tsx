@@ -1,10 +1,17 @@
-import { Button } from "@/components/ui/button";
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle } from "lucide-react";
 
 export default function DashboardPage() {
-  const availableBalance = 1234.56;
+  const [availableBalance, setAvailableBalance] = useState(0);
+
+  useEffect(() => {
+    const balance = Number(window.localStorage.getItem('ganhaflow_balance') || '0');
+    setAvailableBalance(balance);
+  }, []);
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
@@ -23,7 +30,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold">R$ {availableBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-            <p className="text-xs text-muted-foreground mt-1">Atualizado em tempo real.</p>
+            <p className="text-xs text-muted-foreground mt-1">Atualizado ao carregar a página.</p>
           </CardContent>
         </Card>
 

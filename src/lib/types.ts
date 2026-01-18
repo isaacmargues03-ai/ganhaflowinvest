@@ -11,3 +11,9 @@ export interface UserInvestment {
   machine: Machine;
   purchaseDate: Date;
 }
+
+export interface Token {
+  id: string;
+  value: number;
+  isRedeemed: boolean;
+}
