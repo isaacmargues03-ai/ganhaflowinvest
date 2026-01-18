@@ -9,8 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Copy, TicketPlus, Trash2, Shield, Loader2 } from 'lucide-react';
 import type { Token } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { useFirestore, useCollection } from '@/firebase';
-import { addDoc, collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { addDoc, collection, deleteDoc, doc } from 'firebase/firestore';
 
 export default function AdminPage() {
   const { toast } = useToast();
@@ -18,10 +18,21 @@ export default function AdminPage() {
   const [amount, setAmount] = useState<number | string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   
-  const tokensCollection = collection(firestore, 'tokens');
+  const tokensCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'tokens');
+  }, [firestore]);
   const { data: tokens, isLoading, error } = useCollection<Token>(tokensCollection);
 
   const generateToken = async () => {
+    if (!tokensCollection) {
+        toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "A conexão com o banco de dados não está pronta. Tente novamente.",
+        });
+        return;
+    }
     if (typeof amount !== 'number' || amount <= 0) {
       toast({
         variant: "destructive",
