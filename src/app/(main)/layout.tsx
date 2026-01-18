@@ -101,12 +101,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     isActive={pathname === item.href}
                     tooltip={{ children: item.label }}
                     onClick={() => {
-                        const sidebar = document.querySelector('[data-sidebar="sidebar"][data-mobile="true"]');
-                        if (sidebar && sidebar.parentElement) {
-                            if (sidebar.parentElement.getAttribute('data-state') === 'open') {
-                                sidebar.parentElement.querySelector('button[aria-label="Close"]')?.click();
-                            }
-                        }
+                      const sheetContent = document.querySelector('[data-sidebar="sidebar"][data-mobile="true"]');
+                      const closeButton = sheetContent?.querySelector('button[aria-label="Close"]');
+                      if (closeButton instanceof HTMLElement) {
+                        closeButton.click();
+                      }
                     }}
                   >
                     <Link href={item.href}>
@@ -157,7 +156,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 md:hidden">
               <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
                 <Gem className="h-6 w-6 text-primary" />
-                <span>GanhaFlow</span>
+                <span>GanhaFlow Invest</span>
               </Link>
               <SidebarTrigger />
             </header>
