@@ -15,7 +15,7 @@ import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, AuthEr
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function LoginPage() {
-  const telegramSupportUrl = 'https://t.me/+r4XketJaOmlmZTAx';
+  const telegramSupportUrl = 'http://t.me/GANHE_FLOEINVEST';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
