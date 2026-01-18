@@ -5,14 +5,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { machines } from "@/lib/data";
 import { Gem } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useInvestments } from "@/context/investments-context";
+import type { Machine } from '@/lib/types';
 
 export default function MachinesPage() {
   const { toast } = useToast();
+  const { addUserInvestment } = useInvestments();
 
-  const handleRent = (machineName: string) => {
+  const handleRent = (machine: Machine) => {
+    addUserInvestment(machine);
     toast({
       title: "Máquina Alugada!",
-      description: `Você alugou a máquina ${machineName} com sucesso.`,
+      description: `Você alugou a máquina ${machine.name} com sucesso.`,
     });
   };
 
@@ -48,7 +52,7 @@ export default function MachinesPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full font-bold" onClick={() => handleRent(machine.name)}>Alugar Máquina</Button>
+              <Button className="w-full font-bold" onClick={() => handleRent(machine)}>Alugar Máquina</Button>
             </CardFooter>
           </Card>
         ))}

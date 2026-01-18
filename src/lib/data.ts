@@ -38,15 +38,4 @@ export const machines: Machine[] = [
   },
 ];
 
-export const userInvestments: UserInvestment[] = [
-    {
-        id: 'inv1',
-        machine: machines[1], // Silver
-        purchaseDate: new Date(new Date().setDate(new Date().getDate() - 3)),
-    },
-    {
-        id: 'inv2',
-        machine: machines[3], // Platinum
-        purchaseDate: new Date(new Date().setDate(new Date().getDate() - 1)),
-    },
-];
+export const userInvestments: UserInvestment[] = [];

@@ -2,14 +2,40 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { userInvestments } from "@/lib/data";
 import { add, differenceInDays, format, formatDistanceToNow } from "date-fns";
 import { ptBR } from 'date-fns/locale';
-import { Gem, Calendar, CheckCircle } from "lucide-react";
+import { Gem, Calendar, CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useInvestments } from "@/context/investments-context";
+import { useEffect, useState } from "react";
 
 export default function MyMachinesPage() {
+  const { userInvestments } = useInvestments();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return (
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Minhas Máquinas</h1>
+          <p className="text-muted-foreground">Acompanhe o progresso dos seus investimentos.</p>
+        </div>
+        <Card className="text-center py-12 flex flex-col items-center justify-center">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                Carregando suas máquinas...
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
@@ -21,8 +47,12 @@ export default function MyMachinesPage() {
       {userInvestments.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {userInvestments.map((investment) => {
-            const endDate = add(investment.purchaseDate, { days: investment.machine.cycleDays });
-            const daysPassed = differenceInDays(new Date(), investment.purchaseDate);
+            if (!investment || !investment.machine || !investment.purchaseDate) {
+              return null;
+            }
+
+            const endDate = add(new Date(investment.purchaseDate), { days: investment.machine.cycleDays });
+            const daysPassed = differenceInDays(new Date(), new Date(investment.purchaseDate));
             const progress = Math.min(100, (daysPassed / investment.machine.cycleDays) * 100);
             const isCompleted = progress >= 100;
             
@@ -34,7 +64,7 @@ export default function MyMachinesPage() {
                     {investment.machine.name}
                   </CardTitle>
                   <CardDescription>
-                    Investido em: {format(investment.purchaseDate, "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                    Investido em: {format(new Date(investment.purchaseDate), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
@@ -56,7 +86,7 @@ export default function MyMachinesPage() {
                         </span>
                       ) : (
                         <span>
-                          Retorno em {formatDistanceToNow(endDate, { locale: ptBR })}
+                          Retorno {formatDistanceToNow(endDate, { locale: ptBR, addSuffix: true })}
                         </span>
                       )}
                     </div>
