@@ -89,7 +89,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2">
               <Logo />
-              <SidebarTrigger className="ml-auto" />
+              <SidebarTrigger className="ml-auto hidden md:flex" />
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -100,6 +100,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     asChild
                     isActive={pathname === item.href}
                     tooltip={{ children: item.label }}
+                    onClick={() => {
+                        const sidebar = document.querySelector('[data-sidebar="sidebar"][data-mobile="true"]');
+                        if (sidebar && sidebar.parentElement) {
+                            if (sidebar.parentElement.getAttribute('data-state') === 'open') {
+                                sidebar.parentElement.querySelector('button[aria-label="Close"]')?.click();
+                            }
+                        }
+                    }}
                   >
                     <Link href={item.href}>
                       <item.icon />
@@ -145,7 +153,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </div>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset>
+            <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 md:hidden">
+              <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
+                <Gem className="h-6 w-6 text-primary" />
+                <span>GanhaFlow</span>
+              </Link>
+              <SidebarTrigger />
+            </header>
+            {children}
+        </SidebarInset>
       </SidebarProvider>
   );
 }
