@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // For now, anyone can read the list of tokens, but this should be locked down.
+    // Only admins should be able to create/update tokens.
+    // Users should only be able to "update" (redeem) a token once.
+    match /tokens/{tokenId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+      
+      match /investments/{investmentId} {
+        allow read, write: if isSignedIn() && isOwner(userId);
+      }
+    }
+  }
+}

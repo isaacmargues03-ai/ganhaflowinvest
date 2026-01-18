@@ -17,3 +17,10 @@ export interface Token {
   value: number;
   isRedeemed: boolean;
 }
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  balance: number;
+}

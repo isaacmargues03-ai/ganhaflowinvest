@@ -1,0 +1,102 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's public profile.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "balance": {
+          "type": "number",
+          "description": "The user's available balance."
+        }
+      },
+      "required": [
+        "name",
+        "email"
+      ]
+    },
+    "Token": {
+      "title": "Redemption Token",
+      "description": "A token that can be redeemed for balance.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "description": "The monetary value of the token."
+        },
+        "isRedeemed": {
+          "type": "boolean",
+          "description": "Whether the token has been redeemed."
+        },
+        "redeemedBy": {
+          "type": "string",
+          "description": "The UID of the user who redeemed the token."
+        },
+        "redeemedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the token was redeemed."
+        }
+      },
+      "required": [
+        "value",
+        "isRedeemed"
+      ]
+    },
+    "UserInvestment": {
+      "title": "User Investment",
+      "description": "Represents a machine rented by a user.",
+      "type": "object",
+      "properties": {
+        "machineId": {
+          "type": "string",
+          "description": "The ID of the rented machine."
+        },
+        "purchaseDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the machine was rented."
+        }
+      },
+      "required": [
+        "machineId",
+        "purchaseDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "google.com"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores public information for each user."
+    },
+    "/tokens/{tokenId}": {
+      "schema": {
+        "$ref": "#/entities/Token"
+      },
+      "description": "Stores all redemption tokens."
+    },
+    "/users/{userId}/investments/{investmentId}": {
+      "schema": {
+        "$ref": "#/entities/UserInvestment"
+      },
+      "description": "Stores the investments for a specific user."
+    }
+  }
+}
