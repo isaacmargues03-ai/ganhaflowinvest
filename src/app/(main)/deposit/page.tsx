@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 
 const predefinedAmounts = [10, 20, 50, 100, 200];
-const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
+const telegramSupportUrl = 'https://t.me/+r4XketJaOmlmZTAx';
 
 export default function DepositPage() {
   const [amount, setAmount] = useState<number | string>(50);

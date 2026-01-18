@@ -4,7 +4,7 @@ import { LifeBuoy } from "lucide-react";
 import Link from "next/link";
 
 export default function SupportPage() {
-  const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
+  const telegramSupportUrl = 'https://t.me/+r4XketJaOmlmZTAx';
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 flex items-center justify-center">

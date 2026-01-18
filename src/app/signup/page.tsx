@@ -15,7 +15,7 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function SignupPage() {
-  const telegramSupportUrl = 'https://t.me/GANHE_FLOEINVEST';
+  const telegramSupportUrl = 'https://t.me/+r4XketJaOmlmZTAx';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
