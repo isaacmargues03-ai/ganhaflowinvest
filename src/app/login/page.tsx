@@ -74,8 +74,6 @@ export default function LoginPage() {
             email: user.email,
             balance: 0,
             createdAt: serverTimestamp(),
-            referralCode: user.uid.substring(0, 8).toUpperCase(),
-            referrerId: null,
         });
       }
 

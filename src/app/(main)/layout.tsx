@@ -26,7 +26,6 @@ import {
   Ticket,
   Shield,
   Loader2,
-  Users,
 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { useAuth, useUser } from '@/firebase';
@@ -40,7 +39,6 @@ const navItems = [
   { href: '/deposit', icon: PiggyBank, label: 'Recarregar' },
   { href: '/redeem-token', icon: Ticket, label: 'Resgatar Token' },
   { href: '/withdraw', icon: DollarSign, label: 'Saque' },
-  { href: '/referrals', icon: Users, label: 'Indicações' },
   { href: '/support', icon: LifeBuoy, label: 'Suporte' },
 ];
 

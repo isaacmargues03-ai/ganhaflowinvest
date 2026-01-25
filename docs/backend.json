@@ -9,11 +9,9 @@
         "name": { "type": "string", "description": "The user's display name." },
         "email": { "type": "string", "format": "email" },
         "balance": { "type": "number", "description": "The user's current account balance." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of account creation."},
-        "referralCode": { "type": "string", "description": "The user's unique referral code." },
-        "referrerId": { "type": "string", "description": "The UID of the user who referred them." }
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of account creation."}
       },
-      "required": ["uid", "name", "email", "balance", "createdAt", "referralCode"]
+      "required": ["uid", "name", "email", "balance", "createdAt"]
     },
     "InvestmentMachine": {
       "title": "Investment Machine",
@@ -53,19 +51,6 @@
         "redeemedAt": { "type": "string", "format": "date-time", "description": "Timestamp of redemption."}
       },
       "required": ["code", "value", "isRedeemed"]
-    },
-    "Referral": {
-      "title": "Referral",
-      "type": "object",
-      "description": "Represents a referral made by a user.",
-      "properties": {
-        "referredUserId": { "type": "string", "description": "The UID of the user who was referred." },
-        "referredUserName": { "type": "string", "description": "The name of the user who was referred." },
-        "status": { "type": "string", "enum": ["pending", "completed"], "description": "The status of the referral." },
-        "reward": { "type": "number", "description": "The reward given for the referral." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the referral was made."}
-      },
-      "required": ["referredUserId", "referredUserName", "status", "createdAt"]
     }
   },
   "auth": {
@@ -103,14 +88,6 @@
           "entityName": "Token",
           "schema": { "$ref": "#/entities/Token" },
           "description": "Top-level collection for all redemption tokens."
-        }
-      },
-      {
-        "path": "/users/{userId}/referrals/{referralId}",
-        "definition": {
-          "entityName": "Referral",
-          "schema": { "$ref": "#/entities/Referral" },
-          "description": "Subcollection for users referred by this user."
         }
       }
     ]
