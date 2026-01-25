@@ -9,7 +9,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 
 const predefinedAmounts = [10, 20, 50, 100, 200];
-const telegramSupportUrl = 'http://t.me/GANHE_FLOEINVEST';
+const telegramSupportUrl1 = 'http://t.me/GANHE_FLOEINVEST';
+const telegramSupportUrl2 = 'http://t.me/Ganhaflowinvest';
 
 export default function DepositPage() {
   const [amount, setAmount] = useState<number | string>(50);
@@ -31,7 +32,9 @@ export default function DepositPage() {
             <Info className="h-4 w-4" />
             <AlertTitle>Como funciona a recarga?</AlertTitle>
             <AlertDescription>
-              1. Entre em contato com nosso <Link href={telegramSupportUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline">suporte no Telegram</Link>.<br/>
+              1. Entre em contato com nosso suporte via Telegram:<br/>
+              - <Link href={telegramSupportUrl1} target="_blank" rel="noopener noreferrer" className="font-bold underline">Suporte 1</Link><br/>
+              - <Link href={telegramSupportUrl2} target="_blank" rel="noopener noreferrer" className="font-bold underline">Suporte 2</Link><br/>
               2. Solicite a chave PIX para o valor desejado.<br/>
               3. Envie o comprovante do pagamento.<br/>
               4. Você receberá um token para resgatar seu saldo.
@@ -61,9 +64,12 @@ export default function DepositPage() {
             />
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="grid grid-cols-2 gap-4">
           <Button className="w-full text-lg py-6 bg-accent text-accent-foreground hover:bg-accent/90" asChild>
-            <Link href={telegramSupportUrl} target="_blank" rel="noopener noreferrer">Contatar Suporte para Recarregar</Link>
+            <Link href={telegramSupportUrl1} target="_blank" rel="noopener noreferrer">Suporte 1</Link>
+          </Button>
+          <Button className="w-full text-lg py-6 bg-accent text-accent-foreground hover:bg-accent/90" asChild>
+            <Link href={telegramSupportUrl2} target="_blank" rel="noopener noreferrer">Suporte 2</Link>
           </Button>
         </CardFooter>
       </Card>
