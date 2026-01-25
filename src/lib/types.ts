@@ -33,4 +33,15 @@ export interface UserProfile {
   email: string;
   balance: number;
   createdAt: Timestamp;
+  referralCode: string;
+  referrerId?: string | null;
+}
+
+export interface Referral {
+  id: string;
+  referredUserId: string;
+  referredUserName: string;
+  status: 'pending' | 'completed';
+  reward: number;
+  createdAt: Timestamp | Date;
 }

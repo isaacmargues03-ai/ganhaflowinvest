@@ -12,13 +12,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 export default function SignupPage() {
   const telegramSupportUrl = 'http://t.me/GANHE_FLOEINVEST';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -37,9 +38,30 @@ export default function SignupPage() {
     setIsLoading(true);
     if (!auth || !firestore) return;
 
+    let referrerId: string | null = null;
+    if (referralCode.trim()) {
+      const usersRef = collection(firestore, 'users');
+      const q = query(usersRef, where("referralCode", "==", referralCode.trim().toUpperCase()));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        toast({
+            variant: 'destructive',
+            title: 'Código de Indicação Inválido',
+            description: 'O cadastro continuará, mas a indicação não foi registrada.',
+        });
+      } else {
+        referrerId = querySnapshot.docs[0].id;
+      }
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
+
+      if (referrerId === firebaseUser.uid) {
+        toast({ variant: 'destructive', title: 'Oops!', description: 'Você não pode indicar a si mesmo.' });
+        referrerId = null;
+      }
 
       await updateProfile(firebaseUser, { displayName: name });
       
@@ -48,9 +70,22 @@ export default function SignupPage() {
         uid: firebaseUser.uid,
         name: name,
         email: email,
-        balance: 0, // Initial balance
+        balance: 0,
         createdAt: serverTimestamp(),
+        referralCode: firebaseUser.uid.substring(0, 8).toUpperCase(),
+        referrerId: referrerId,
       });
+
+      if (referrerId) {
+        const referralCollectionRef = collection(firestore, 'users', referrerId, 'referrals');
+        await addDoc(referralCollectionRef, {
+            referredUserId: firebaseUser.uid,
+            referredUserName: name,
+            status: 'pending',
+            createdAt: serverTimestamp(),
+            reward: 0,
+        });
+      }
       
       toast({
           title: 'Conta criada com sucesso!',
@@ -121,6 +156,17 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="referral-code">Código de Indicação (Opcional)</Label>
+              <Input 
+                id="referral-code"
+                placeholder="CÓDIGO"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                disabled={isLoading}
+                className="uppercase"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

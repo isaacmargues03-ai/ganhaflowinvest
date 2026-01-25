@@ -21,6 +21,13 @@ service cloud.firestore {
     match /users/{userId}/investments/{investmentId} {
     	allow read, list, create, update, delete: if isOwner(userId);
     }
+
+    // Users can read their own referrals.
+    match /users/{userId}/referrals/{referralId} {
+      allow read, list: if isOwner(userId);
+      // Referrals are created during signup, not directly by clients.
+      allow create, update, delete: if false;
+    }
     
     // Investment machines are public and read-only for all users.
     match /investmentMachines/{machineId} {
