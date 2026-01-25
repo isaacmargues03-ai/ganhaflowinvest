@@ -42,14 +42,14 @@ const navItems = [
   { href: '/support', icon: LifeBuoy, label: 'Suporte' },
 ];
 
-const adminEmail = 'isaacmargues03@gmail.com';
+const adminEmails = ['isaacmargues03@gmail.com', 'Adsonmartins1988@gmail.com'];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
-  const isUserAdmin = user?.email === adminEmail;
+  const isUserAdmin = user?.email ? adminEmails.includes(user.email) : false;
 
   useEffect(() => {
     if (!isUserLoading && !user) {
