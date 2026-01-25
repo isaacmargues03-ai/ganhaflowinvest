@@ -154,9 +154,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </Sidebar>
         <SidebarInset>
             <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 md:hidden">
-              <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
-                <Gem className="h-6 w-6 text-primary" />
-                <span>GanhaFlow Invest</span>
+              <Link href="/dashboard" className="text-xl font-black uppercase tracking-wider text-primary">
+                GanhaFlow Invest
               </Link>
               <SidebarTrigger />
             </header>
