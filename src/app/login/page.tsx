@@ -129,9 +129,6 @@ export default function LoginPage() {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Senha</Label>
-                <Link href={telegramSupportUrl} target="_blank" rel="noopener noreferrer" className="ml-auto inline-block text-sm text-primary/80 hover:text-primary underline">
-                  Esqueceu sua senha?
-                </Link>
               </div>
               <Input 
                 id="password" 
