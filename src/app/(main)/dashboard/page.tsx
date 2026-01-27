@@ -77,7 +77,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
              <Button asChild className="w-full">
-                <Link href="https://t.me/+r4XketJaOmlmZTAx" target="_blank" rel="noopener noreferrer">
+                <Link href="https://t.me/+kBUR1ezlHQJkNGEx" target="_blank" rel="noopener noreferrer">
                     Entrar na Comunidade
                 </Link>
             </Button>
